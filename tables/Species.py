@@ -41,7 +41,8 @@ class Species(Base):
             user.create(engine)
             logging.info("Table Species Created")
         except:
-            logging.error("Failed Species Table Users")
+            logging.error("Failed Create Table Species")
+            logging.exception('')
     
     #Migration
     def addColumn(self,engine,column):

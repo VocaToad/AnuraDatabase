@@ -1,14 +1,15 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
+import argparse
 import yaml
 import logging
 import pathlib
-from tables import Species, Recording
+from tables import Species, Recording, Base
 
 
 databasePath = pathlib.Path(__file__).parent.absolute()
 configPath = databasePath.joinpath("config").absolute()
-dbConfigPath = databasePath.joinpath("DBConfig.yaml").absolute()
+dbConfigPath = configPath.joinpath("DBConfig.yaml").absolute()
 
 class AnuraDatabase:
     def __init__(self):
@@ -67,9 +68,32 @@ class AnuraDatabase:
             logging.critical("Unable to create session in database: "+self.dbConfig["db"])
             return None
 
-    def PopulateDatabase(self, filepath):
-        pass
+class AnuraDatabaseSetup:
+    def __init__(self,args=None):
+        self.ParseArguments(args)
+        self.anuraDatabase = AnuraDatabase()
+        self.anuraDatabase.Connect()
+    
+    def ParseArguments(self, args):
+        parser = argparse.ArgumentParser(description="Database Builder and Populator.")
+        
+        parser.add_argument("--Create","-c", dest="create", action='store_true', required=False,
+                    help="Creates a database.")
+        parser.add_argument("--Populate","-p", dest="populate", nargs="*", default=[], required=False,
+                    help="List of files to populate the database.")
+        parsedArguments = parser.parse_args(args)
+        self.create = parsedArguments.create
+        self.populate = parsedArguments.populate
+    
+    def Create(self):
+        if not self.create:
+            return
+        try:
+            self.anuraDatabase.Create()
+        except:
+            logging.critical("Failed create AnuraDatabase")
+            logging.exception('')
 
 if __name__ == "__main__":
-    anuraDatabase = AnuraDatabase()    
-    anuraDatabase.Connect()
+    anuraDatabase = AnuraDatabaseSetup()
+    anuraDatabase.Create()
