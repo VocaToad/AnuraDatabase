@@ -21,7 +21,8 @@ class AnuraDatabase:
             self.engine = create_engine(engineParameters)
             logging.info("Engine created for: "+engineParameters)
 
-            self.meta = MetaData(bind=self.engine, reflect=True)
+            self.meta = MetaData(bind=self.engine)
+            self.meta.reflect()
             Base.metadata = self.meta
             logging.debug("Instance of AnuraDatabase created successfully")
         except:
@@ -33,9 +34,9 @@ class AnuraDatabase:
         try:
             with open(dbConfigPath, "r") as dbConfigFile:
                 dbConfig = yaml.load(dbConfigFile)
-            logging.info("Loaded Database Configuration: "+dbConfigPath._str)
+            logging.info("Loaded Database Configuration: "+str(dbConfigPath))
         except:
-            logging.critical("Error loading Database Configuration:"+dbConfigPath._str)
+            logging.critical("Error loading Database Configuration:"+str(dbConfigPath))
             logging.exception('')
 
         logging.debug("loadDBConfig finished")
@@ -79,11 +80,8 @@ class AnuraDatabaseSetup:
         
         parser.add_argument("--Create","-c", dest="create", action='store_true', required=False,
                     help="Creates a database.")
-        parser.add_argument("--Populate","-p", dest="populate", nargs="*", default=[], required=False,
-                    help="List of files to populate the database.")
         parsedArguments = parser.parse_args(args)
         self.create = parsedArguments.create
-        self.populate = parsedArguments.populate
     
     def Create(self):
         if not self.create:

@@ -1,2 +1,2 @@
-from anuraDatabase import *
+from AnuraDatabase import AnuraDatabase
 from tables import *
