@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Sequence, Table, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Sequence, Table, UniqueConstraint, ForeignKey
 from .Utils import *
 from .Base import *
 import logging
@@ -38,7 +38,7 @@ class Recording(Base):
     def create(self, engine, meta):
         logging.debug("Creating Table Recordings")
         user = Table(self.__tablename__, meta,
-        Column('id',Integer,  Sequence('species_id_seq'), primary_key=True),
+        Column('id',Integer,  Sequence('recording_id_seq'), primary_key=True),
         Column('number', String(50), nullable=False),
         Column('species', Integer, ForeignKey("species.id"), nullable=False),
         Column('register', String(2000)),
@@ -54,7 +54,8 @@ class Recording(Base):
             user.create(engine)
             logging.info("Table Recordings Created")
         except:
-            logging.error("Failed Recordings Table Users")
+            logging.error("Failed Create Table Recordings")
+            logging.exception('')
     
     #Migration
     def addColumn(self,engine,column):

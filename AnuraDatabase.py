@@ -1,14 +1,15 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
+import argparse
 import yaml
 import logging
 import pathlib
-from tables import Species, Recording
+from tables import Species, Recording, Base
 
 
 databasePath = pathlib.Path(__file__).parent.absolute()
 configPath = databasePath.joinpath("config").absolute()
-dbConfigPath = databasePath.joinpath("DBConfig.yaml").absolute()
+dbConfigPath = configPath.joinpath("DBConfig.yaml").absolute()
 
 class AnuraDatabase:
     def __init__(self):
@@ -20,7 +21,8 @@ class AnuraDatabase:
             self.engine = create_engine(engineParameters)
             logging.info("Engine created for: "+engineParameters)
 
-            self.meta = MetaData(bind=self.engine, reflect=True)
+            self.meta = MetaData(bind=self.engine)
+            self.meta.reflect()
             Base.metadata = self.meta
             logging.debug("Instance of AnuraDatabase created successfully")
         except:
@@ -32,9 +34,9 @@ class AnuraDatabase:
         try:
             with open(dbConfigPath, "r") as dbConfigFile:
                 dbConfig = yaml.load(dbConfigFile)
-            logging.info("Loaded Database Configuration: "+dbConfigPath._str)
+            logging.info("Loaded Database Configuration: "+str(dbConfigPath))
         except:
-            logging.critical("Error loading Database Configuration:"+dbConfigPath._str)
+            logging.critical("Error loading Database Configuration:"+str(dbConfigPath))
             logging.exception('')
 
         logging.debug("loadDBConfig finished")
@@ -67,9 +69,29 @@ class AnuraDatabase:
             logging.critical("Unable to create session in database: "+self.dbConfig["db"])
             return None
 
-    def PopulateDatabase(self, filepath):
-        pass
+class AnuraDatabaseSetup:
+    def __init__(self,args=None):
+        self.ParseArguments(args)
+        self.anuraDatabase = AnuraDatabase()
+        self.anuraDatabase.Connect()
+    
+    def ParseArguments(self, args):
+        parser = argparse.ArgumentParser(description="Database Builder and Populator.")
+        
+        parser.add_argument("--Create","-c", dest="create", action='store_true', required=False,
+                    help="Creates a database.")
+        parsedArguments = parser.parse_args(args)
+        self.create = parsedArguments.create
+    
+    def Create(self):
+        if not self.create:
+            return
+        try:
+            self.anuraDatabase.Create()
+        except:
+            logging.critical("Failed create AnuraDatabase")
+            logging.exception('')
 
 if __name__ == "__main__":
-    anuraDatabase = AnuraDatabase()    
-    anuraDatabase.Connect()
+    anuraDatabase = AnuraDatabaseSetup()
+    anuraDatabase.Create()
